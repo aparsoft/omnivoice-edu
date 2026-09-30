@@ -20,7 +20,7 @@ Chunks never overlap: overlapping text makes the model re-speak the
 shared words, which is audible as repetition.
 
 Usage:
-    from src.utils.text_chunker import chunk_text_for_tts
+    from omnivoice_edu.text import chunk_text_for_tts
 
     chunks = chunk_text_for_tts(long_text)
     audios = model.generate(text=[c.text for c in chunks], ...)

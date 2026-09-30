@@ -1,6 +1,6 @@
-# OmniVoice TTS Server
+# OmniVoice Edu
 
-A production-ready HTTP API for [OmniVoice](https://github.com/k2-fsa/OmniVoice), the zero-shot multilingual text-to-speech model from k2-fsa that supports 600+ languages. It adds a text-normalization layer built for educational and technical content, so math, LaTeX, currency and markdown are read aloud the way a teacher would say them.
+A production-ready text-to-speech server for [OmniVoice](https://github.com/k2-fsa/OmniVoice), the zero-shot multilingual text-to-speech model from k2-fsa that supports 600+ languages. It adds a text-normalization layer built for educational and technical content, so math, LaTeX, currency and markdown are read aloud the way a teacher would say them.
 
 Built and maintained by [Aparsoft](https://aparsoft.com) as the voice layer for AI tutoring and oral-assessment products for Indian schools.
 
@@ -15,7 +15,7 @@ OmniVoice produces excellent speech, but a raw model call is not yet a service. 
 - **Fast repeat requests.** Each reference voice is encoded, and transcribed by Whisper if needed, once. After that it's reused from memory and from disk, including across restarts.
 - **Service basics.** Requests are serialized on the GPU in a worker thread, so `/health` stays responsive. The server also offers optional Bearer-token auth, a sandboxed voices directory, and version reporting.
 
-Measured on an RTX PRO 4500 (Blackwell): 43 seconds of cloned speech is generated in about 3 seconds.
+Measured on an RTX PRO 4500 (Blackwell) with `num_step=32`: 43 seconds of cloned speech is generated in about 3 seconds.
 
 ## Requirements
 
@@ -26,8 +26,8 @@ Measured on an RTX PRO 4500 (Blackwell): 43 seconds of cloned speech is generate
 ## Installation
 
 ```bash
-git clone https://github.com/aparsoft/omnivoice-setup.git
-cd omnivoice-setup
+git clone https://github.com/aparsoft/omnivoice-edu.git
+cd omnivoice-edu
 python3 -m venv .venv
 source .venv/bin/activate
 
@@ -35,8 +35,8 @@ source .venv/bin/activate
 pip install torch==2.8.0+cu128 torchaudio==2.8.0+cu128 \
     --extra-index-url https://download.pytorch.org/whl/cu128
 
-# 2. Server dependencies
-pip install -r requirements.txt
+# 2. OmniVoice Edu and its dependencies (plus the test client extras)
+pip install -e ".[test]"
 ```
 
 Model weights download from Hugging Face on first start.
@@ -45,18 +45,20 @@ Model weights download from Hugging Face on first start.
 
 ```bash
 # Put reference voices (3–10 s clips) in the voices directory
-mkdir -p local_folder/voice_prompts
-cp /path/to/narrator.wav local_folder/voice_prompts/
+mkdir -p voices
+cp /path/to/narrator.wav voices/
 
-python -m src.server.tts_server
+omnivoice-edu            # or: python -m omnivoice_edu
 ```
 
 The server listens on `http://0.0.0.0:8444`. It logs the versions it runs with at startup:
 
 ```
-INFO  Versions: omnivoice 0.2.1 | torch 2.8.0+cu128 (CUDA 12.8) | transformers 5.12.0 | fastapi 0.136.3 | python 3.12.3
+INFO  Versions: omnivoice-edu 0.1.0 | omnivoice 0.2.1 | torch 2.8.0+cu128 (CUDA 12.8) | transformers 5.12.0 | fastapi 0.136.3 | python 3.12.3
 INFO  GPU: NVIDIA RTX PRO 4500 Blackwell
 ```
+
+Interactive API docs are served at `http://localhost:8444/docs`.
 
 Generate speech:
 
@@ -75,7 +77,8 @@ curl -s http://localhost:8444/tts/json \
 | `OMNIVOICE_PORT` | `8444` | Port |
 | `OMNIVOICE_DEVICE` | `cuda:0` | Device for the TTS model |
 | `OMNIVOICE_DTYPE` | `float16` | `float16`, `bfloat16` or `float32` |
-| `OMNIVOICE_VOICES_DIR` | `local_folder/voice_prompts` | The only directory `ref_audio_path` may read from |
+| `OMNIVOICE_VOICES_DIR` | `voices` | The only directory `ref_audio_path` may read from |
+| `OMNIVOICE_CACHE_DIR` | `.cache/voice_prompts` | Where encoded voice prompts are stored between restarts |
 | `OMNIVOICE_API_KEY` | unset | If set, `/tts` and `/tts/json` require `Authorization: Bearer <key>` |
 | `OMNIVOICE_ASR_DEVICE` | model's device | Device for Whisper, e.g. `cpu` to save about 1.6 GB of VRAM |
 | `OMNIVOICE_MAX_BATCH` | `8` | Maximum number of chunks synthesized together in one batch |
@@ -95,6 +98,7 @@ Reports readiness and the runtime versions. It never requires an API key.
   "device_name": "NVIDIA RTX PRO 4500 Blackwell",
   "cached_voices": 2,
   "versions": {
+    "omnivoice_edu": "0.1.0",
     "omnivoice": "0.2.1",
     "torch": "2.8.0+cu128",
     "cuda": "12.8",
@@ -153,7 +157,7 @@ curl -s http://localhost:8444/tts -F text="Hello from a cloned voice." \
 
 ## Text preprocessing
 
-Every request passes through [`text_preprocessor.py`](src/utils/text_preprocessor.py). These are real outputs:
+Every request passes through [`text/preprocessor.py`](omnivoice_edu/text/preprocessor.py). These are real outputs, checked by `tests/test_preprocessor.py`:
 
 | Input | Spoken as |
 |---|---|
@@ -191,36 +195,51 @@ For short texts, or when the caller controls segmentation, set `skip_chunking: t
 
 ## Implementation notes
 
-**First-word clipping.** OmniVoice's default post-processing trims leading silence at a fixed −50 dBFS threshold. The model starts each utterance with a soft, gradual onset, and that onset often sits below the threshold, so the start of the first word gets trimmed. The server sets `postprocess_output=False`, which skips only that trim; fades, padding and loudness normalization still run. It then removes excess leading silence at −60 dBFS and keeps a 120 ms guard band, so no phoneme is lost. Run `python -m src.tests.test_first_word_onset` to see the A/B measurement.
+**First-word clipping.** OmniVoice's default post-processing trims leading silence at a fixed −50 dBFS threshold. The model starts each utterance with a soft, gradual onset, and that onset often sits below the threshold, so the start of the first word gets trimmed. The server sets `postprocess_output=False`, which skips only that trim; fades, padding and loudness normalization still run. It then removes excess leading silence at −60 dBFS and keeps a 120 ms guard band, so no phoneme is lost. Run `python -m tests.test_first_word_onset` to see the A/B measurement.
 
 **Voice consistency across chunks.** Each OmniVoice `generate()` call without a reference samples a new voice, so chunks generated independently can sound like different speakers. Using the first chunk as the reference for the rest keeps one speaker. This is the same approach OmniVoice uses in its own long-form generation. In our measurements, speaker similarity between the start and end of a 43-second clip rose from 0.61 to 0.99.
 
+## Architecture
+
+The engine is independent of the web layer: `synthesis.py` raises plain exceptions (`errors.py`), and `api.py` turns them into HTTP responses.
+
+```
+omnivoice_edu/
+├── api.py           FastAPI app: routes, Bearer auth, error mapping
+├── synthesis.py     the pipeline: preprocess → chunk → batched generate → WAV
+├── voices.py        voices-directory sandbox and the voice-prompt cache
+├── audio.py         chunk joining, leading-silence trim, volume, WAV encoding
+├── model.py         model loading, GPU lock, version reporting
+├── schemas.py       request / response models
+├── config.py        settings from environment variables
+├── errors.py        engine errors with their HTTP status codes
+├── text/
+│   ├── preprocessor.py   text normalization for speech
+│   └── chunker.py        sentence-aware chunking
+└── __main__.py      entry point (`omnivoice-edu`, `python -m omnivoice_edu`)
+tests/               unit tests and API test clients
+```
+
+Reference voices, generated audio and the voice cache (`voices/`, `output/`, `test_output/`, `.cache/`) stay local and are git-ignored.
+
 ## Tests
+
+Unit tests run in seconds and need no GPU or server:
+
+```bash
+python -m tests.test_chunker        # sentence-aware chunking
+python -m tests.test_preprocessor   # text normalization, incl. every README example
+python -m tests.test_units          # voices sandbox, audio processing, duration split
+```
 
 The API tests expect a running server. Point them elsewhere with `TTS_API_URL`, and choose reference voices with `TTS_TEST_VOICE_EN`, `TTS_TEST_VOICE_HI` and `TTS_TEST_VOICE_FILE`.
 
 ```bash
-python -m src.tests.test_chunker          # unit tests, no server needed
-python -m src.tests.test_tts_api          # auto voice, voice design, upload cloning
-python -m src.tests.test_math_tts         # math text, speed, volume, Hindi cloning
-python -m src.tests.test_skip_chunking    # chunked vs single-pass synthesis
-python -m src.tests.test_first_word_onset # onset A/B (loads the model directly)
+python -m tests.test_tts_api          # auto voice, voice design, upload cloning
+python -m tests.test_math_tts         # math text, speed, volume, Hindi cloning
+python -m tests.test_skip_chunking    # chunked vs single-pass synthesis
+python -m tests.test_first_word_onset # onset A/B (loads the model directly)
 ```
-
-## Project structure
-
-```
-├── src/
-│   ├── server/tts_server.py        # FastAPI server
-│   ├── utils/text_preprocessor.py  # text normalization pipeline
-│   ├── utils/text_chunker.py       # sentence-aware chunking
-│   └── tests/                      # unit tests and API test clients
-├── requirements.txt
-├── LICENSE                         # Apache-2.0
-└── NOTICE
-```
-
-Reference voices, generated audio and the voice cache (`local_folder/`, `output/`, `test_output/`, `.cache/`) stay local and are git-ignored.
 
 ## Security
 

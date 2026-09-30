@@ -19,10 +19,10 @@ compare the pacing and naturalness.
 
 Usage:
     # Start the server first:
-    python -m src.server.tts_server
+    python -m omnivoice_edu
 
     # Then run this test:
-    python -m src.tests.test_skip_chunking
+    python -m tests.test_skip_chunking
 """
 
 import base64
@@ -34,7 +34,7 @@ import requests
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
 API_BASE = os.environ.get("TTS_API_URL", "http://localhost:8444")
 OUTPUT_DIR = _PROJECT_ROOT / "test_output"
 OUTPUT_DIR.mkdir(exist_ok=True)

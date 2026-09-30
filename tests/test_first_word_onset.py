@@ -10,7 +10,7 @@ mode trims the soft onset, so its leading-window energy ramps up later; the
 server's config keeps the natural onset, so meaningful energy appears earlier.
 
 Loads the model directly (needs a GPU; the API server is not required):
-    python -m src.tests.test_first_word_onset
+    python -m tests.test_first_word_onset
 
 Set TTS_TEST_VOICE_FILE to choose the reference audio.
 """
@@ -21,10 +21,10 @@ from pathlib import Path
 import numpy as np
 from omnivoice import OmniVoice, OmniVoiceGenerationConfig
 
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
 REF = os.environ.get(
     "TTS_TEST_VOICE_FILE",
-    str(_PROJECT_ROOT / "local_folder" / "voice_prompts" / "af_heart.wav"),
+    str(_PROJECT_ROOT / "voices" / "af_heart.wav"),
 )
 # Starts with a soft fricative "S" — the case most prone to onset clipping.
 PHRASE = "So today we are going to learn something amazing about numbers."

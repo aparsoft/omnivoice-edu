@@ -24,8 +24,8 @@ from pathlib import Path
 
 import requests
 
-# Project root is two levels up from this file (src/tests/ → project root)
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+# Project root is one level up from this file (tests/ → project root)
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 API_BASE = os.environ.get("TTS_API_URL", "http://localhost:8444")
 OUTPUT_DIR = _PROJECT_ROOT / "output"

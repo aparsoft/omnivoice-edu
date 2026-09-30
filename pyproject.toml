@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "omnivoice-edu"
+version = "0.1.0"
+description = "OmniVoice TTS server that speaks math, LaTeX, currency and educational content correctly"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Aparsoft Private Limited", email = "contact@aparsoft.com" }]
+requires-python = ">=3.10"
+keywords = ["tts", "text-to-speech", "omnivoice", "voice-cloning", "education", "fastapi", "hindi"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Framework :: FastAPI",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+]
+# Install PyTorch for your platform first (see README); omnivoice pulls in
+# a default torch build otherwise.
+dependencies = [
+    "omnivoice>=0.2.1",
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "python-multipart>=0.0.9",
+    "soundfile>=0.12",
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+test = ["requests>=2.31"]
+
+[project.scripts]
+omnivoice-edu = "omnivoice_edu.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/aparsoft/omnivoice-edu"
+Company = "https://aparsoft.com"
+
+[tool.setuptools.packages.find]
+include = ["omnivoice_edu*"]

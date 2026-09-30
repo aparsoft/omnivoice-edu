@@ -5,15 +5,7 @@ through unchanged, and no overlap is added (overlap was removed because
 it caused the model to re-speak words, creating audible repetition).
 """
 
-import sys
-from pathlib import Path
-
-# Ensure project root is on sys.path
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-if str(_PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(_PROJECT_ROOT))
-
-from src.utils.text_chunker import (
+from omnivoice_edu.text.chunker import (
     Chunk,
     chunk_text_for_tts,
     _merge_fragments,
@@ -213,23 +205,6 @@ def test_chunk_very_long_single_sentence():
 
 
 if __name__ == "__main__":
-    # Run all tests
-    test_funcs = [
-        f for f in globals() if f.startswith("test_") and callable(globals()[f])
-    ]
-    passed = 0
-    failed = 0
-    for func_name in test_funcs:
-        try:
-            globals()[func_name]()
-            print(f"  ✓ {func_name}")
-            passed += 1
-        except AssertionError as e:
-            print(f"  ✗ {func_name}: {e}")
-            failed += 1
-        except Exception as e:
-            print(f"  ✗ {func_name}: {type(e).__name__}: {e}")
-            failed += 1
+    from tests.runner import run_tests
 
-    print(f"\n{passed} passed, {failed} failed out of {len(test_funcs)} tests")
-    sys.exit(1 if failed else 0)
+    run_tests(globals())

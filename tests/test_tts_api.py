@@ -19,16 +19,14 @@ from pathlib import Path
 
 import requests
 
-# Project root is two levels up from this file (src/tests/ → project root)
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+# Project root is one level up from this file (tests/ → project root)
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 API_BASE = os.environ.get("TTS_API_URL", "http://localhost:8444")
 OUTPUT_DIR = _PROJECT_ROOT / "test_output"
 OUTPUT_DIR.mkdir(exist_ok=True)
 
-VOICES_DIR = Path(
-    os.environ.get("OMNIVOICE_VOICES_DIR", _PROJECT_ROOT / "local_folder" / "voice_prompts")
-)
+VOICES_DIR = Path(os.environ.get("OMNIVOICE_VOICES_DIR", _PROJECT_ROOT / "voices"))
 TEST_VOICE_FILE = Path(
     os.environ.get("TTS_TEST_VOICE_FILE", VOICES_DIR / "af_heart.wav")
 )

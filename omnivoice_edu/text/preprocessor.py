@@ -23,7 +23,7 @@ and CMU pronunciation overrides such as ``[B EY1 S]`` — pass through
 unchanged. Non-English text is left intact apart from Unicode cleanup.
 
 Usage:
-    from src.utils.text_preprocessor import preprocess_text_for_tts
+    from omnivoice_edu.text import preprocess_text_for_tts
 
     preprocess_text_for_tts("The area is $\\pi r^2$ for r = 7.")
     # -> "The area is pi r squared for r equals seven."

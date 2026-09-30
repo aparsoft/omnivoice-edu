@@ -23,7 +23,7 @@ env/
 
 # Local data: reference voices, reference docs, generated audio, caches
 local_folder/
-voices/
+/voices
 output/
 test_output/
 .cache/
