@@ -1,0 +1,12 @@
+# Install PyTorch for your platform first (see README), e.g. for CUDA 12.8:
+#   pip install torch==2.8.0+cu128 torchaudio==2.8.0+cu128 \
+#       --extra-index-url https://download.pytorch.org/whl/cu128
+omnivoice>=0.2.1
+fastapi>=0.110
+uvicorn>=0.29
+python-multipart>=0.0.9
+soundfile>=0.12
+numpy>=1.26
+
+# Test clients
+requests>=2.31

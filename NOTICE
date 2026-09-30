@@ -1,0 +1,12 @@
+OmniVoice TTS Server
+Copyright 2026 Aparsoft Private Limited
+
+This product is licensed under the Apache License, Version 2.0.
+
+It uses the following third-party software, which is not bundled and is
+installed separately:
+
+- OmniVoice (https://github.com/k2-fsa/OmniVoice), Apache License 2.0,
+  by the k2-fsa team.
+- Whisper large-v3-turbo (https://huggingface.co/openai/whisper-large-v3-turbo),
+  MIT License, by OpenAI — downloaded on demand to transcribe reference audio.

@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Virtual environments and secrets
+.venv/
+venv/
+env/
+.env
+*.env
+
+# Tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.idea/
+.vscode/
+.DS_Store
+.claude/
+
+# Local data: reference voices, reference docs, generated audio, caches
+local_folder/
+voices/
+output/
+test_output/
+.cache/
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.pt
+
+# Local helper scripts
+auto_commit.py
